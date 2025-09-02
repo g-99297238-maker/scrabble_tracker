@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrabble Points Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <!-- Login Page -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">🎯 Scrabble Tracker</h1>
+                <p class="text-gray-600">Please login to continue</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                    <input type="text" id="username" placeholder="Enter username" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="password" placeholder="Enter password" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                    Login
+                </button>
+            </form>
+            
+            <!-- Score Preview -->
+            <div class="mt-6 bg-gray-50 rounded-lg p-4">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3 text-center">🏆 Current Leaders</h3>
+                <div id="loginLeaderboard" class="space-y-2">
+                    <!-- Preview will be populated here -->
+                </div>
+                <p class="text-xs text-gray-500 text-center mt-3">Login to see full rankings and submit scores</p>
+            </div>
+            
+            <div class="mt-4 text-sm text-gray-600">
+                <p class="text-xs text-gray-500 text-center">Students will be added by the teacher after login</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="hidden">
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-8">
+                <div class="text-center flex-1">
+                    <h1 class="text-4xl font-bold text-gray-800 mb-2">🎯 Scrabble Points Tracker</h1>
+                    <p class="text-gray-600">Weekly score submission and tracking system</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span id="userWelcome" class="text-gray-700 font-medium"></span>
+                    <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        Logout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Score Submission Form (Students Only) -->
+            <div id="studentSection" class="hidden">
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-6">📝 Submit Weekly Score</h2>
+                    
+                    <div id="weekStatus" class="mb-4 p-4 rounded-lg"></div>
+                    
+                    <form id="scoreForm" class="space-y-6">
+                        <!-- Points Input -->
+                        <div>
+                            <label for="pointsInput" class="block text-sm font-medium text-gray-700 mb-2">Points Scored</label>
+                            <input type="number" id="pointsInput" min="0" max="1000" placeholder="Enter points (e.g., 245)" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- File Upload -->
+                        <div>
+                            <label for="proofUpload" class="block text-sm font-medium text-gray-700 mb-2">Upload Screenshot Proof</label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                                <input type="file" id="proofUpload" accept="image/*" class="hidden">
+                                <div id="uploadArea" class="cursor-pointer">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <p class="text-gray-600">Click to upload screenshot or drag and drop</p>
+                                    <p class="text-sm text-gray-400 mt-1">PNG, JPG up to 10MB</p>
+                                </div>
+                                <div id="fileInfo" class="hidden">
+                                    <p class="text-green-600 font-medium">✓ File uploaded successfully</p>
+                                    <p id="fileName" class="text-sm text-gray-600"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                            Submit Score
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Teacher Management Section -->
+            <div id="teacherSection" class="hidden space-y-8">
+                <!-- Student Management -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-6">👥 Manage Students</h2>
+                    
+                    <!-- Add New Student -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Add New Student</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <input type="text" id="newStudentName" placeholder="Enter student name" 
+                                   class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <input type="text" id="newStudentPassword" placeholder="Set password" 
+                                   class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <button id="addStudentBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors">
+                                Add Student
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Students List -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Current Students</h3>
+                        <div id="studentsTable" class="space-y-2">
+                            <!-- Students will be listed here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Week Management -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-6">📅 Week Settings</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Active Week</label>
+                            <select id="activeWeekSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button id="updateWeekBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                Update Active Week
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Submission Monitoring -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-6">📊 Weekly Submission Monitoring</h2>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Week to Monitor</label>
+                        <select id="monitorWeekSelect" class="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg">
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                    </div>
+
+                    <div id="weeklyMonitoringTable" class="overflow-x-auto">
+                        <!-- Weekly monitoring table will appear here -->
+                    </div>
+                </div>
+
+                <!-- Teacher Verification Panel -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-800">👩‍🏫 Pending Verifications</h2>
+                        <div id="pendingBadge" class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
+                            0 pending verification
+                        </div>
+                    </div>
+                    
+                    <div id="pendingList" class="space-y-4">
+                        <!-- Pending submissions will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">🏆 Verified Student Rankings</h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-200">
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Rank</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Student</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Total Points</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Weeks Submitted</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Average</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard">
+                            <!-- Leaderboard will be populated as students submit and get approved -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="hidden fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+                ✓ Score submitted successfully!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // System state
+        let currentUser = null;
+        let userRole = null;
+        let activeWeek = 'week-2024-12-15';
+        let submissionOpen = true;
+
+        // Generate weeks from this Sunday through next year
+        function generateWeeks() {
+            const weeks = [];
+            const today = new Date();
+            
+            // Find this Sunday (or today if it's Sunday)
+            const currentSunday = new Date(today);
+            const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+            currentSunday.setDate(today.getDate() - dayOfWeek);
+            
+            // Generate weeks through December 2026 (approximately 104 weeks)
+            for (let i = 0; i < 104; i++) {
+                const weekDate = new Date(currentSunday);
+                weekDate.setDate(currentSunday.getDate() + (i * 7));
+                
+                const year = weekDate.getFullYear();
+                const month = weekDate.getMonth() + 1;
+                const day = weekDate.getDate();
+                
+                const weekId = `week-${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                const weekDisplay = `Week of ${weekDate.toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                })}`;
+                
+                weeks.push({ id: weekId, display: weekDisplay, date: weekDate });
+            }
+            
+            return weeks;
+        }
+
+        const allWeeks = generateWeeks();
+
+        // Function to create mysterious names (first and last letter only)
+        function createMysteriousName(fullName) {
+            const words = fullName.split(' ');
+            return words.map(word => {
+                if (word.length <= 2) return word;
+                return word[0] + '•'.repeat(word.length - 2) + word[word.length - 1];
+            }).join(' ');
+        }
+
+        // Populate week dropdowns
+        function populateWeekDropdowns() {
+            const activeWeekSelect = document.getElementById('activeWeekSelect');
+            const monitorWeekSelect = document.getElementById('monitorWeekSelect');
+            
+            // Clear existing options
+            activeWeekSelect.innerHTML = '';
+            monitorWeekSelect.innerHTML = '';
+            
+            // Add options for each week
+            allWeeks.forEach(week => {
+                const option1 = document.createElement('option');
+                option1.value = week.id;
+                option1.textContent = week.display;
+                activeWeekSelect.appendChild(option1);
+                
+                const option2 = document.createElement('option');
+                option2.value = week.id;
+                option2.textContent = week.display;
+                monitorWeekSelect.appendChild(option2);
+            });
+            
+            // Set current week as selected
+            activeWeekSelect.value = activeWeek;
+            monitorWeekSelect.value = activeWeek;
+        }
+
+        // Student data storage - starts empty for production
+        let studentData = {};
+
+        // Pending submissions - starts empty
+        let pendingSubmissions = [];
+
+        // Login system - only teacher account exists initially
+        const users = {
+            'skm-teacher': { password: 'YBA3400@englishpanel', role: 'teacher', name: 'Teacher' }
+        };
+
+        // Login form handling
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.toLowerCase();
+            const password = document.getElementById('password').value;
+            
+            if (users[username] && users[username].password === password) {
+                currentUser = username;
+                userRole = users[username].role;
+                
+                // Show main app, hide login
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                
+                // Update welcome message
+                document.getElementById('userWelcome').textContent = `Welcome, ${users[username].name}`;
+                
+                // Show appropriate sections
+                if (userRole === 'teacher') {
+                    document.getElementById('teacherSection').classList.remove('hidden');
+                    populateWeekDropdowns();
+                    updateStudentsList();
+                    updatePendingList();
+                    updateWeeklyMonitoring();
+                } else {
+                    document.getElementById('studentSection').classList.remove('hidden');
+                    updateWeekStatus();
+                }
+                
+                updateLeaderboard();
+                updatePendingCount();
+            } else {
+                alert('Invalid username or password');
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            currentUser = null;
+            userRole = null;
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('teacherSection').classList.add('hidden');
+            document.getElementById('studentSection').classList.add('hidden');
+            document.getElementById('loginForm').reset();
+        });
+
+        // Week status for students
+        function updateWeekStatus() {
+            const weekStatus = document.getElementById('weekStatus');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            const currentWeek = allWeeks.find(w => w.id === activeWeek);
+            const weekDisplay = currentWeek ? currentWeek.display : 'Current Week';
+            
+            if (submissionOpen) {
+                weekStatus.className = 'mb-4 p-4 rounded-lg bg-green-100 border border-green-300';
+                weekStatus.innerHTML = `<p class="text-green-800"><strong>✓ Submissions Open</strong> - Currently accepting scores for ${weekDisplay}</p>`;
+                submitBtn.disabled = false;
+                submitBtn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors';
+            } else {
+                weekStatus.className = 'mb-4 p-4 rounded-lg bg-red-100 border border-red-300';
+                weekStatus.innerHTML = `<p class="text-red-800"><strong>✗ Submissions Closed</strong> - Not currently accepting new submissions</p>`;
+                submitBtn.disabled = true;
+                submitBtn.className = 'w-full bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg cursor-not-allowed';
+            }
+        }
+
+        // Student management
+        document.getElementById('addStudentBtn').addEventListener('click', function() {
+            const name = document.getElementById('newStudentName').value.trim();
+            const password = document.getElementById('newStudentPassword').value.trim();
+            
+            if (name && password) {
+                const id = name.toLowerCase().replace(/\s+/g, '');
+                if (!studentData[id]) {
+                    studentData[id] = { name: name, scores: [], total: 0 };
+                    users[id] = { password: password, role: 'student', name: name };
+                    updateStudentsList();
+                    updateLeaderboard();
+                    document.getElementById('newStudentName').value = '';
+                    document.getElementById('newStudentPassword').value = '';
+                    alert(`✓ Added ${name} to the system with password: ${password}`);
+                } else {
+                    alert('Student already exists');
+                }
+            } else {
+                alert('Please enter both name and password');
+            }
+        });
+
+        function updateStudentsList() {
+            const table = document.getElementById('studentsTable');
+            const students = Object.entries(studentData).filter(([id]) => id !== 'teacher');
+            
+            if (students.length === 0) {
+                table.innerHTML = '<p class="text-gray-500 text-center py-4">No students added yet</p>';
+                return;
+            }
+
+            table.innerHTML = students.map(([id, data]) => `
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                    <div class="flex-1">
+                        <span class="font-medium text-gray-800">${data.name}</span>
+                        <span class="text-sm text-gray-500 ml-2">(Username: ${id})</span>
+                        <span class="text-sm text-gray-500 ml-2">Password: ${users[id].password}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="window.editStudent('${id}')" 
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors">
+                            Edit
+                        </button>
+                        <button onclick="window.deleteStudent('${id}')" 
+                                class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-colors">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Make functions globally accessible
+        window.editStudent = function(studentId) {
+            console.log('Edit student called for:', studentId);
+            const student = studentData[studentId];
+            const user = users[studentId];
+            
+            if (!student || !user) {
+                alert('Student not found');
+                return;
+            }
+            
+            const newName = prompt(`Edit student name:`, student.name);
+            if (newName === null) return; // User cancelled
+            
+            const newPassword = prompt(`Edit password for ${newName}:`, user.password);
+            if (newPassword === null) return; // User cancelled
+            
+            if (newName.trim() && newPassword.trim()) {
+                // Update student data
+                student.name = newName.trim();
+                user.name = newName.trim();
+                user.password = newPassword.trim();
+                
+                updateStudentsList();
+                updateLeaderboard();
+                alert(`✓ Updated ${newName}'s information`);
+            } else {
+                alert('Name and password cannot be empty');
+            }
+        };
+
+        window.deleteStudent = function(studentId) {
+            console.log('Delete student called for:', studentId);
+            const student = studentData[studentId];
+            
+            if (!student) {
+                alert('Student not found');
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to delete ${student.name}? This will remove all their scores and cannot be undone.`)) {
+                delete studentData[studentId];
+                delete users[studentId];
+                
+                // Remove any pending submissions from this student
+                pendingSubmissions = pendingSubmissions.filter(s => s.studentId !== studentId);
+                
+                updateStudentsList();
+                updateLeaderboard();
+                updatePendingList();
+                updatePendingCount();
+                alert(`✓ Deleted ${student.name} from the system`);
+            }
+        };
+
+        // Week management
+        document.getElementById('updateWeekBtn').addEventListener('click', function() {
+            activeWeek = document.getElementById('activeWeekSelect').value;
+            submissionOpen = true;
+            updateWeekStatus();
+            
+            const currentWeek = allWeeks.find(w => w.id === activeWeek);
+            const weekDisplay = currentWeek ? currentWeek.display : 'Selected Week';
+            alert(`✓ Active week set to ${weekDisplay}`);
+        });
+
+        // Weekly monitoring
+        document.getElementById('monitorWeekSelect').addEventListener('change', function() {
+            updateWeeklyMonitoring();
+        });
+
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('proofUpload');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                fileName.textContent = file.name;
+                uploadArea.classList.add('hidden');
+                fileInfo.classList.remove('hidden');
+            }
+        });
+
+        // Form submission
+        document.getElementById('scoreForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!submissionOpen) {
+                alert('Submissions are currently closed');
+                return;
+            }
+            
+            const points = parseInt(document.getElementById('pointsInput').value);
+            const file = document.getElementById('proofUpload').files[0];
+
+            if (!points || !file) {
+                alert('Please fill in all fields and upload a screenshot.');
+                return;
+            }
+
+            // Create submission object
+            const submission = {
+                id: Date.now(),
+                studentId: currentUser,
+                studentName: users[currentUser].name,
+                points: points,
+                week: activeWeek,
+                fileName: file.name,
+                fileData: null,
+                timestamp: new Date().toLocaleString(),
+                status: 'pending'
+            };
+
+            // Convert file to base64
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                submission.fileData = e.target.result;
+                updatePendingList();
+            };
+            reader.readAsDataURL(file);
+
+            pendingSubmissions.push(submission);
+
+            // Show success message
+            const successMsg = document.getElementById('successMessage');
+            successMsg.innerHTML = '✓ Score submitted for teacher verification!';
+            successMsg.classList.remove('hidden');
+            setTimeout(() => successMsg.classList.add('hidden'), 3000);
+
+            // Reset form
+            this.reset();
+            uploadArea.classList.remove('hidden');
+            fileInfo.classList.add('hidden');
+
+            updatePendingCount();
+        });
+
+        // Teacher verification functions
+        function updatePendingCount() {
+            const badge = document.getElementById('pendingBadge');
+            const count = pendingSubmissions.filter(s => s.status === 'pending').length;
+            badge.textContent = `${count} pending verification`;
+            badge.className = count > 0 ? 
+                'bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium' :
+                'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium';
+        }
+
+        function updatePendingList() {
+            if (userRole !== 'teacher') return;
+            
+            const pendingList = document.getElementById('pendingList');
+            const pending = pendingSubmissions.filter(s => s.status === 'pending');
+            
+            if (pending.length === 0) {
+                pendingList.innerHTML = '<p class="text-gray-500 text-center py-8">No pending submissions to review</p>';
+                return;
+            }
+
+            pendingList.innerHTML = pending.map(submission => `
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">${submission.studentName}</h4>
+                            <p class="text-sm text-gray-600">${allWeeks.find(w => w.id === submission.week)?.display || submission.week} • ${submission.timestamp}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg font-bold text-blue-600">${submission.points} points</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 mb-2">Screenshot proof:</p>
+                        ${submission.fileData ? 
+                            `<img src="${submission.fileData}" alt="Screenshot proof" 
+                                 class="max-w-xs max-h-48 rounded border cursor-pointer hover:opacity-80"
+                                 onclick="openImageModal('${submission.fileData}', '${submission.studentName}')">` :
+                            `<div class="bg-gray-100 p-4 rounded text-center text-gray-500">Loading image...</div>`
+                        }
+                        <p class="text-xs text-gray-500 mt-1">${submission.fileName}</p>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="approveSubmission(${submission.id})" 
+                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm transition-colors">
+                            ✓ Approve
+                        </button>
+                        <button onclick="rejectSubmission(${submission.id})" 
+                                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm transition-colors">
+                            ✗ Reject
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.approveSubmission = function(submissionId) {
+            const submission = pendingSubmissions.find(s => s.id === submissionId);
+            if (submission) {
+                studentData[submission.studentId].scores.push(submission.points);
+                studentData[submission.studentId].total += submission.points;
+                submission.status = 'approved';
+                
+                updateLeaderboard();
+                updatePendingCount();
+                updatePendingList();
+                updateWeeklyMonitoring();
+                
+                alert(`✓ Approved ${submission.points} points for ${submission.studentName}`);
+            }
+        };
+
+        window.rejectSubmission = function(submissionId) {
+            const submission = pendingSubmissions.find(s => s.id === submissionId);
+            if (submission) {
+                submission.status = 'rejected';
+                updatePendingCount();
+                updatePendingList();
+                updateWeeklyMonitoring();
+                alert(`✗ Rejected submission from ${submission.studentName}`);
+            }
+        };
+
+        window.openImageModal = function(imageSrc, studentName) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="max-w-4xl max-h-full p-4">
+                    <div class="bg-white rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold">${studentName}'s Screenshot</h3>
+                            <button onclick="this.closest('.fixed').remove()" 
+                                    class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                        </div>
+                        <img src="${imageSrc}" alt="Full screenshot" class="max-w-full max-h-96 mx-auto">
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        };
+
+        function updateWeeklyMonitoring() {
+            if (userRole !== 'teacher') return;
+            
+            const monitoringTable = document.getElementById('weeklyMonitoringTable');
+            const selectedWeek = document.getElementById('monitorWeekSelect').value;
+            const currentWeek = allWeeks.find(w => w.id === selectedWeek);
+            const weekDisplay = currentWeek ? currentWeek.display : 'Selected Week';
+            
+            // Get all students
+            const allStudents = Object.entries(studentData).filter(([id]) => id !== 'teacher');
+            
+            // Get submissions for selected week
+            const weekSubmissions = pendingSubmissions.filter(s => s.week === selectedWeek);
+            
+            monitoringTable.innerHTML = `
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-gray-700">${weekDisplay} - Submission Status</h3>
+                </div>
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Student</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Points</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Submitted</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${allStudents.map(([id, data]) => {
+                            const submission = weekSubmissions.find(s => s.studentId === id);
+                            let statusBadge, points, submittedTime;
+                            
+                            if (submission) {
+                                if (submission.status === 'pending') {
+                                    statusBadge = '<span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">⏳ Pending</span>';
+                                } else if (submission.status === 'approved') {
+                                    statusBadge = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">✓ Approved</span>';
+                                } else {
+                                    statusBadge = '<span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">✗ Rejected</span>';
+                                }
+                                points = submission.points;
+                                submittedTime = submission.timestamp;
+                            } else {
+                                statusBadge = '<span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">📝 Not Submitted</span>';
+                                points = '-';
+                                submittedTime = '-';
+                            }
+                            
+                            return `
+                                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                    <td class="py-3 px-4 font-medium">${data.name}</td>
+                                    <td class="py-3 px-4">${statusBadge}</td>
+                                    <td class="py-3 px-4">${points}</td>
+                                    <td class="py-3 px-4 text-sm text-gray-600">${submittedTime}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                <div class="mt-4 text-sm text-gray-600">
+                    <p><strong>Summary:</strong> 
+                        ${weekSubmissions.filter(s => s.status === 'approved').length} approved, 
+                        ${weekSubmissions.filter(s => s.status === 'pending').length} pending, 
+                        ${allStudents.length - weekSubmissions.length} not submitted
+                    </p>
+                </div>
+            `;
+        }
+
+        function updateLeaderboard() {
+            const leaderboard = document.getElementById('leaderboard');
+            
+            const sortedStudents = Object.entries(studentData)
+                .filter(([id, data]) => data.total > 0)
+                .sort(([,a], [,b]) => b.total - a.total);
+
+            if (sortedStudents.length === 0) {
+                leaderboard.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-8 text-center text-gray-500">
+                            No verified scores yet. Students will appear here after submitting and getting approved.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                leaderboard.innerHTML = sortedStudents.map(([id, data], index) => {
+                    const rank = index + 1;
+                    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
+                    const average = data.scores.length > 0 ? Math.round(data.total / data.scores.length) : 0;
+                    
+                    return `
+                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                            <td class="py-3 px-4">${medal} ${rank}</td>
+                            <td class="py-3 px-4 font-medium">${data.name}</td>
+                            <td class="py-3 px-4 text-green-600 font-semibold">${data.total.toLocaleString()}</td>
+                            <td class="py-3 px-4">${data.scores.length}</td>
+                            <td class="py-3 px-4">${average}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+            
+            // Also update the login page preview
+            updateLoginLeaderboard();
+        }
+
+        // Update login page leaderboard preview
+        function updateLoginLeaderboard() {
+            const loginLeaderboard = document.getElementById('loginLeaderboard');
+            
+            const sortedStudents = Object.entries(studentData)
+                .filter(([id, data]) => data.total > 0)
+                .sort(([,a], [,b]) => b.total - a.total)
+                .slice(0, 5); // Show top 5 only
+
+            if (sortedStudents.length === 0) {
+                loginLeaderboard.innerHTML = '<p class="text-gray-500 text-center text-sm">No scores yet - be the first!</p>';
+                return;
+            }
+
+            loginLeaderboard.innerHTML = sortedStudents.map(([id, data], index) => {
+                const rank = index + 1;
+                const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+                const mysteriousName = createMysteriousName(data.name);
+                
+                return `
+                    <div class="flex justify-between items-center py-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium">${medal}</span>
+                            <span class="text-sm text-gray-700">${mysteriousName}</span>
+                        </div>
+                        <span class="text-sm font-semibold text-green-600">${data.total.toLocaleString()}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('border-blue-400');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('border-blue-400');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('border-blue-400');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                const file = files[0];
+                fileName.textContent = file.name;
+                uploadArea.classList.add('hidden');
+                fileInfo.classList.remove('hidden');
+            }
+        });
+
+        // Initialize login leaderboard on page load
+        updateLoginLeaderboard();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'978d29b7e32637b2',t:'MTc1NjgxNzczOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
+"Add Scrabble Tracker"
